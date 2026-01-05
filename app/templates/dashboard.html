@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ current_user.name }}!</h1>
+        <p class="text-gray-600">Here's an overview of your job search progress.</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {% for stat in stats %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">{{ stat.label }}</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ stat.value }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-full flex items-center justify-center
+                    {% if stat.color == 'primary' %}bg-primary-100 text-primary-600
+                    {% elif stat.color == 'blue' %}bg-blue-100 text-blue-600
+                    {% elif stat.color == 'green' %}bg-green-100 text-green-600
+                    {% elif stat.color == 'red' %}bg-red-100 text-red-600
+                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    <i class="fas {{ stat.icon }} text-xl"></i>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Application Status Breakdown -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Status Breakdown</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {% for status, label in ApplicationStatus.choices() %}
+                    <a href="{{ url_for('applications.index', status=status) }}" 
+                       class="block p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition text-center">
+                        <p class="text-2xl font-bold text-gray-900">{{ status_counts.get(status, 0) }}</p>
+                        <p class="text-xs text-gray-500">{{ label }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Applications -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Applications</h2>
+                    <a href="{{ url_for('applications.index') }}" class="text-sm text-primary-600 hover:text-primary-700">
+                        View all <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                
+                {% if recent_applications %}
+                <div class="space-y-3">
+                    {% for app in recent_applications %}
+                    <a href="{{ url_for('applications.show', id=app.id) }}" 
+                       class="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition border border-gray-100">
+                        <div>
+                            <p class="font-medium text-gray-900">{{ app.company }}</p>
+                            <p class="text-sm text-gray-500">{{ app.role }}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if app.status_color == 'green' %}bg-green-100 text-green-800
+                            {% elif app.status_color == 'blue' %}bg-blue-100 text-blue-800
+                            {% elif app.status_color == 'purple' %}bg-purple-100 text-purple-800
+                            {% elif app.status_color == 'yellow' %}bg-yellow-100 text-yellow-800
+                            {% elif app.status_color == 'red' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ app.status_display }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 mb-4">No applications yet</p>
+                    <a href="{{ url_for('applications.new') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition">
+                        <i class="fas fa-plus mr-2"></i>Add Your First Application
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Due Reminders -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-bell text-yellow-500 mr-2"></i>Due Reminders
+                    </h2>
+                    <a href="{{ url_for('reminders.index') }}" class="text-sm text-primary-600 hover:text-primary-700">
+                        View all
+                    </a>
+                </div>
+                
+                {% if due_reminders %}
+                <div class="space-y-3">
+                    {% for reminder in due_reminders %}
+                    <div class="p-3 rounded-lg {% if reminder.is_overdue %}bg-red-50 border border-red-200{% else %}bg-yellow-50 border border-yellow-200{% endif %}">
+                        <p class="font-medium text-gray-900 text-sm">{{ reminder.message }}</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            {{ reminder.application.company }} &bull;
+                            <span class="{% if reminder.is_overdue %}text-red-600{% else %}text-yellow-600{% endif %}">
+                                {{ reminder.remind_on.strftime('%b %d') }}
+                            </span>
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center py-4">No due reminders</p>
+                {% endif %}
+            </div>
+
+            <!-- Upcoming Interviews -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-calendar-check text-blue-500 mr-2"></i>Upcoming Interviews
+                </h2>
+                
+                {% if upcoming_interviews %}
+                <div class="space-y-3">
+                    {% for interview in upcoming_interviews %}
+                    <a href="{{ url_for('applications.show', id=interview.application_id) }}" 
+                       class="block p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition">
+                        <p class="font-medium text-gray-900 text-sm">{{ interview.type_display }}</p>
+                        <p class="text-xs text-gray-600">{{ interview.application.company }}</p>
+                        <p class="text-xs text-blue-600 mt-1">
+                            <i class="fas fa-clock mr-1"></i>{{ interview.scheduled_at.strftime('%b %d at %I:%M %p') }}
+                        </p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center py-4">No upcoming interviews</p>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                <div class="space-y-2">
+                    <a href="{{ url_for('applications.new') }}" 
+                       class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition">
+                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-plus text-primary-600"></i>
+                        </div>
+                        <span class="font-medium text-gray-900">Add Application</span>
+                    </a>
+                    <a href="{{ url_for('applications.index') }}" 
+                       class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-list text-blue-600"></i>
+                        </div>
+                        <span class="font-medium text-gray-900">View All Applications</span>
+                    </a>
+                    <a href="{{ url_for('reminders.index') }}" 
+                       class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-bell text-yellow-600"></i>
+                        </div>
+                        <span class="font-medium text-gray-900">Manage Reminders</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

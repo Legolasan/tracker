@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Reminders - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Reminders</h1>
+            <p class="text-gray-600">Never miss a follow-up</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex gap-3">
+            <a href="{{ url_for('reminders.index', completed='true' if not show_completed else 'false') }}" 
+               class="text-sm text-gray-600 hover:text-gray-800">
+                {{ 'Hide' if show_completed else 'Show' }} completed
+            </a>
+        </div>
+    </div>
+
+    <!-- Overdue -->
+    {% if overdue %}
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-red-600 mb-3">
+            <i class="fas fa-exclamation-circle mr-2"></i>Overdue ({{ overdue|length }})
+        </h2>
+        <div class="bg-red-50 border border-red-200 rounded-lg divide-y divide-red-200">
+            {% for reminder in overdue %}
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900">{{ reminder.message }}</p>
+                    <p class="text-sm text-gray-600">
+                        <a href="{{ url_for('applications.show', id=reminder.application_id) }}" class="text-primary-600 hover:underline">
+                            {{ reminder.application.company }} - {{ reminder.application.role }}
+                        </a>
+                        <span class="text-red-600 ml-2">{{ reminder.remind_on.strftime('%b %d, %Y') }}</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <form method="POST" action="{{ url_for('reminders.complete', id=reminder.id) }}">
+                        <button type="submit" class="p-2 text-gray-400 hover:text-green-600" title="Mark complete">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('reminders.edit', id=reminder.id) }}" class="p-2 text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Today -->
+    {% if today %}
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-yellow-600 mb-3">
+            <i class="fas fa-bell mr-2"></i>Today ({{ today|length }})
+        </h2>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg divide-y divide-yellow-200">
+            {% for reminder in today %}
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900">{{ reminder.message }}</p>
+                    <p class="text-sm text-gray-600">
+                        <a href="{{ url_for('applications.show', id=reminder.application_id) }}" class="text-primary-600 hover:underline">
+                            {{ reminder.application.company }} - {{ reminder.application.role }}
+                        </a>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <form method="POST" action="{{ url_for('reminders.complete', id=reminder.id) }}">
+                        <button type="submit" class="p-2 text-gray-400 hover:text-green-600" title="Mark complete">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('reminders.edit', id=reminder.id) }}" class="p-2 text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming -->
+    {% if upcoming %}
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-700 mb-3">
+            <i class="fas fa-clock mr-2"></i>Upcoming ({{ upcoming|length }})
+        </h2>
+        <div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
+            {% for reminder in upcoming %}
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900">{{ reminder.message }}</p>
+                    <p class="text-sm text-gray-600">
+                        <a href="{{ url_for('applications.show', id=reminder.application_id) }}" class="text-primary-600 hover:underline">
+                            {{ reminder.application.company }} - {{ reminder.application.role }}
+                        </a>
+                        <span class="ml-2">{{ reminder.remind_on.strftime('%b %d, %Y') }}</span>
+                        <span class="text-gray-400 ml-1">(in {{ reminder.days_until }} day{{ 's' if reminder.days_until != 1 else '' }})</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <form method="POST" action="{{ url_for('reminders.complete', id=reminder.id) }}">
+                        <button type="submit" class="p-2 text-gray-400 hover:text-green-600" title="Mark complete">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('reminders.edit', id=reminder.id) }}" class="p-2 text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Completed -->
+    {% if completed %}
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-400 mb-3">
+            <i class="fas fa-check mr-2"></i>Completed ({{ completed|length }})
+        </h2>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-200">
+            {% for reminder in completed %}
+            <div class="p-4 flex items-center justify-between opacity-60">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900 line-through">{{ reminder.message }}</p>
+                    <p class="text-sm text-gray-500">
+                        {{ reminder.application.company }} - {{ reminder.application.role }}
+                    </p>
+                </div>
+                <form method="POST" action="{{ url_for('reminders.delete', id=reminder.id) }}">
+                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not overdue and not today and not upcoming and not completed %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <i class="fas fa-bell-slash text-5xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No reminders</h3>
+        <p class="text-gray-500 mb-4">Set reminders from your application pages to stay on top of follow-ups.</p>
+        <a href="{{ url_for('applications.index') }}" 
+           class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition">
+            View Applications
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

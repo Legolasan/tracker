@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if interview else 'Schedule' }} Interview - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+        <a href="{{ url_for('applications.show', id=application.id) if application else url_for('applications.index') }}" 
+           class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-2"></i>Back
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            {{ 'Edit Interview' if interview else 'Schedule Interview' }}
+        </h1>
+
+        {% if application %}
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-500">For application:</p>
+            <p class="font-medium text-gray-900">{{ application.company }} - {{ application.role }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('interviews.edit', id=interview.id) if interview else url_for('interviews.create') }}" class="space-y-6">
+            {% if not interview %}
+            <input type="hidden" name="application_id" value="{{ application.id if application else '' }}">
+            
+            {% if not application and applications %}
+            <div>
+                <label for="application_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Application <span class="text-red-500">*</span>
+                </label>
+                <select id="application_id" name="application_id" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <option value="">Select an application</option>
+                    {% for app in applications %}
+                    <option value="{{ app.id }}">{{ app.company }} - {{ app.role }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="interview_type" class="block text-sm font-medium text-gray-700 mb-1">Interview Type</label>
+                    <select id="interview_type" name="interview_type"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if interview and interview.interview_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                    <input type="number" id="duration_minutes" name="duration_minutes" min="15" step="15"
+                           value="{{ interview.duration_minutes if interview else 60 }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+
+                <div>
+                    <label for="scheduled_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="scheduled_date" name="scheduled_date" required
+                           value="{{ interview.scheduled_at.strftime('%Y-%m-%d') if interview else '' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+
+                <div>
+                    <label for="scheduled_time" class="block text-sm font-medium text-gray-700 mb-1">
+                        Time <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" id="scheduled_time" name="scheduled_time" required
+                           value="{{ interview.scheduled_at.strftime('%H:%M') if interview else '' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </div>
+
+            <div>
+                <label for="interviewer" class="block text-sm font-medium text-gray-700 mb-1">Interviewer(s)</label>
+                <input type="text" id="interviewer" name="interviewer"
+                       value="{{ interview.interviewer if interview else '' }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                       placeholder="John Smith, Jane Doe">
+            </div>
+
+            <div>
+                <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location / Meeting Link</label>
+                <input type="text" id="location" name="location"
+                       value="{{ interview.location if interview else '' }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                       placeholder="Zoom link, office address, etc.">
+            </div>
+
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Preparation Notes</label>
+                <textarea id="notes" name="notes" rows="3"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          placeholder="Topics to prepare, questions to ask...">{{ interview.notes if interview else '' }}</textarea>
+            </div>
+
+            {% if interview %}
+            <div class="border-t pt-6">
+                <h3 class="font-medium text-gray-900 mb-4">Interview Outcome</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="outcome" class="block text-sm font-medium text-gray-700 mb-1">Result</label>
+                        <select id="outcome" name="outcome"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            {% for value, label in outcome_choices %}
+                            <option value="{{ value }}" {% if interview.outcome == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="feedback" class="block text-sm font-medium text-gray-700 mb-1">Feedback / Notes</label>
+                    <textarea id="feedback" name="feedback" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="How did it go? Any feedback received?">{{ interview.feedback if interview else '' }}</textarea>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between pt-4 border-t">
+                {% if interview %}
+                <form method="POST" action="{{ url_for('interviews.delete', id=interview.id) }}" 
+                      onsubmit="return confirm('Delete this interview?');" class="inline">
+                    <button type="submit" class="text-red-600 hover:text-red-700 font-medium">
+                        <i class="fas fa-trash mr-1"></i>Delete
+                    </button>
+                </form>
+                {% else %}
+                <div></div>
+                {% endif %}
+                
+                <div class="flex gap-4">
+                    <a href="{{ url_for('applications.show', id=application.id) if application else url_for('applications.index') }}" 
+                       class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition">
+                        {{ 'Update' if interview else 'Schedule' }} Interview
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
