@@ -88,7 +88,7 @@ def new():
 @login_required
 def show(id):
     application = Application.query.filter_by(id=id, user_id=current_user.id).first_or_404()
-    return render_template('applications/show.html', application=application)
+    return render_template('applications/show.html', application=application, status_choices=ApplicationStatus.choices())
 
 
 @applications_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
