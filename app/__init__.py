@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_login import LoginManager
 from app.database import db
 from app.config import Config
@@ -15,6 +15,11 @@ def create_app(config_class=Config):
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    
+    # Health check endpoint (no auth required)
+    @app.route('/health')
+    def health_check():
+        return jsonify({'status': 'healthy'}), 200
     
     # Register blueprints
     from app.routers.auth import auth_bp
